@@ -1,7 +1,10 @@
+import { getTwo } from "./functions";
+
 const operations: Array<string> = ['+', '-', ':', '*'];
 
 const eq: string = " (+ 2 2) ";
-main(eq);
+//main(eq);
+console.log(getTwo());
 
 // function splitStringIfValid(stringToValidate: string): Array<string>
 // {
@@ -183,7 +186,7 @@ function splitStringIfValid(stringToValidate: string): Array<string>
     return splittedString;
 }
 
-function evaluate(splittedInput: Array<string>): number
+export function evaluate(splittedInput: Array<string>): number
 {
     splittedInput.forEach(e => console.log(e));
     return 2;
