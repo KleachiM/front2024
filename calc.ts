@@ -1,24 +1,22 @@
-import { splitStringIfValid } from "./functions";
+import { splitStringIfValid, calculateFromArr } from "./functions";
 
 const eq: string = "+ 2";
 main(eq);
 
-export function evaluate(splittedInput: Array<string>): number
-{
-    splittedInput.forEach(e => console.log(e));
-    return 2;
-}
-
-function main (eq: string)
-{
+export function mainImpl(eq: string): number{
     const splittedInput = splitStringIfValid(eq);
 
     if (splittedInput.length == 0)
     {
         console.log("Невалидная строка");
-        return;
+        return NaN;
     }
 
-    const result = evaluate(splittedInput);
+   return calculateFromArr(splittedInput);
+}
+
+function main (eq: string)
+{
+    const result = mainImpl(eq);
     console.log(`Результат: ${result}`)
 }
