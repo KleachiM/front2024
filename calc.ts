@@ -1,6 +1,6 @@
 import { splitStringIfValid, calculateFromArr } from "./functions";
 
-const eq: string = "+ 2";
+const eq: string = "+ 5 5";
 main(eq);
 
 export function mainImpl(eq: string): number{

@@ -10,9 +10,14 @@ export function splitStringIfValid(input: string): Array<string>
     let bracketsCount = 0;
     
     enum parserState {
-        start, stop, error,
-        operation, operand1, operand2,
-        bracketOpen, bracketClose,
+        start,
+        stop,
+        error,
+        operation, 
+        operand1, 
+        operand2,
+        bracketOpen, 
+        bracketClose,
     }
 
     let state = parserState.start;

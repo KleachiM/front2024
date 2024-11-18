@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mainImpl = mainImpl;
 var functions_1 = require("./functions");
-var eq = "+ 2";
+var eq = "( + 5 5)";
 main(eq);
 function mainImpl(eq) {
     var splittedInput = (0, functions_1.splitStringIfValid)(eq);
