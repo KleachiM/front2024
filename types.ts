@@ -1,19 +1,33 @@
-export type Presentation = {
-    header: PresentationHeader,
-    slides: Array<Slide>,
-    activeSlide: number,
-    selection: Array<number>
+//editor
+
+export type SelectionType = {
+    type: 'slide' | 'element',
+    value: string[],
 }
 
-export type PresentationHeader = {
+export type Presentation = {
     title: string,
-    actions: Array<Image>
+    slides: Array<Slide>,
+    activeSlideId: string,
+    selection: SelectionType,
 }
 
 export type Slide = {
-    background: string|Image,
+    id: string,
+    background: string | Image,
     slideData: Array<SlideElement>,
-    selection: Array<SelectionElement>
+}
+
+export type Point = {
+    x: number,
+    y: number
+}
+
+export type Block = {
+    id: string,
+    point: Point,
+    width: number,
+    height: number
 }
 
 export type Image = {
@@ -21,7 +35,12 @@ export type Image = {
     source: string
 }
 
-export type TextBlock = {
+export type ImageBlock = Block & {
+    type: 'image',
+    source: string
+}
+
+export type TextBlock = Block & {
     type: 'text',
     content: string,
     fontSize: number,
@@ -29,7 +48,7 @@ export type TextBlock = {
     fontFamily: string
 }
 
-export type SlideElement = TextBlock|Image;
+export type SlideElement = TextBlock|ImageBlock;
 
 export type SelectionElement = {
     selected: Array<SlideElement>
