@@ -23,11 +23,15 @@ export type Point = {
     y: number
 }
 
+export type Dimension = {
+    width: number,
+    height: number
+}
+
 export type Block = {
     id: string,
     point: Point,
-    width: number,
-    height: number
+    dimension: Dimension
 }
 
 export type Image = {

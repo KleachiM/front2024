@@ -1,11 +1,18 @@
-import { addSlide, changeSlidePosition, deleteSlides, setTitle, defaultBlock, addElement, deleteElement  } from "./presFunctions";
+import { addSlide, changeSlidePosition, deleteSlides, setTitle, defaultBlock, addElement, deleteElement, moveElementByOffset, resizeElement, changeTextBlockProperty  } from "./presFunctions";
 import { Presentation, Slide, SlideElement, TextBlock } from "./types";
 
-const pres: Presentation = {
+const presWithActiveSlide: Presentation = {
     title: 'oldTitle',
     slides: [getSlideWithTextBlock('slide 1'), getSlideWithTextBlock('slide 2')],
     activeSlideId: 'tstSlideslide 1',
     selection: {type: 'slide', value: ['tstSlideslide 1']}
+};
+
+const presWithActiveElement: Presentation = {
+    title: 'oldTitle',
+    slides: [getSlideWithTextBlock('slide 1'), getSlideWithTextBlock('slide 2')],
+    activeSlideId: 'tstSlideslide 1',
+    selection: {type: 'element', value: ['tstTxtBlockslide 1']}
 };
 
 function getSlideWithTextBlock(content: string): Slide {
@@ -16,8 +23,9 @@ function getSlideWithTextBlock(content: string): Slide {
             type: 'text',
             id: `tstTxtBlock${content}`,
             point: {x: defaultBlock.point.x, y: defaultBlock.point.y},
-            width: defaultBlock.width,
-            height: defaultBlock.height,
+            dimension: {
+                width: defaultBlock.dimension.width,
+                height: defaultBlock.dimension.height},
             content: content,
             fontSize: 10,
             fontColor: 'black',
@@ -37,7 +45,7 @@ describe('Not empty title', () => {
     it('should set title', () => {
         const newTitle = 'newTitle';
 
-        const newHeader = setTitle(pres, newTitle);
+        const newHeader = setTitle(presWithActiveSlide, newTitle);
         expect(newHeader.title).toEqual(newTitle);
     });
 });
@@ -46,22 +54,22 @@ describe('Empty title', () => {
     it('should not set title', () => {
         const newTitle = '';
 
-        const newPres = setTitle(pres, newTitle);
-        expect(newPres.title).toEqual(pres.title);
+        const newPres = setTitle(presWithActiveSlide, newTitle);
+        expect(newPres.title).toEqual(presWithActiveSlide.title);
     });
 });
 
 describe('Add slide to not empty pres', () => {
     it ('should add', () => {
-       const newPresentation = addSlide(pres);
-       expect(newPresentation.slides.length).toEqual(pres.slides.length + 1);
+       const newPresentation = addSlide(presWithActiveSlide);
+       expect(newPresentation.slides.length).toEqual(presWithActiveSlide.slides.length + 1);
     });
 });
 
 describe('Add slide to not empty pres', () => {
     it ('should add', () => {
-       const newPresentation = addSlide(pres);
-       expect(newPresentation.slides.length).toEqual(pres.slides.length + 1);
+       const newPresentation = addSlide(presWithActiveSlide);
+       expect(newPresentation.slides.length).toEqual(presWithActiveSlide.slides.length + 1);
     });
 });
 
@@ -138,7 +146,6 @@ describe('Delete 2 & 4 slide in pres with length 5', () => {
         expect(newPres.activeSlideId).toEqual(newPres.slides[2].id);
     });
  });
-
 
 describe('Change slide position', () => {
     it ('should change empty 3 (last) to 2', () => {
@@ -262,12 +269,12 @@ describe('Change slide position', () => {
 
 describe('Add text block', () => {
     it('should add text block', () => {
-        const newPres = addElement(pres, 'text');
-        expect(newPres.activeSlideId).toEqual(pres.activeSlideId);
+        const newPres = addElement(presWithActiveSlide, 'text');
+        expect(newPres.activeSlideId).toEqual(presWithActiveSlide.activeSlideId);
         expect(newPres.slides.find(slide => 
             slide.id === newPres.activeSlideId).slideData.length)
-            .toEqual(pres.slides.find(slide => 
-                slide.id === pres.activeSlideId).slideData.length + 1);
+            .toEqual(presWithActiveSlide.slides.find(slide => 
+                slide.id === presWithActiveSlide.activeSlideId).slideData.length + 1);
     });
 });
 
@@ -284,5 +291,87 @@ describe('Delete textblock', () => {
         const newPres = deleteElement(pres);
         expect(newPres.slides[0].slideData.length)
             .toEqual(pres.slides[0].slideData.length - 1);
+    });
+});
+
+describe('Change element position', () => {
+    it ('should change position single element', () => {
+        const offset = {x: 10, y: 10};
+        const newPres = moveElementByOffset(presWithActiveElement, offset);
+        const oldElemPoint = 
+            presWithActiveElement.slides.find(s => s.id === presWithActiveElement.activeSlideId)
+                .slideData.find(e => e.id === presWithActiveElement.selection.value[0]).point;
+        const newElemPoint = 
+            newPres.slides.find(s => s.id === newPres.activeSlideId)
+                .slideData.find(e => e.id === newPres.selection.value[0]).point;
+        
+        expect(newElemPoint.x).toEqual(oldElemPoint.x + offset.x);
+        expect(newElemPoint.y).toEqual(oldElemPoint.y + offset.y);
+    });
+});
+
+describe('Resize element', () => {
+    it ('should resize', () => { 
+        const offsetPoint = {x: 10, y: 20};
+        const offsetDimension = {width: 30, height: 40};
+        const newPres = resizeElement(presWithActiveElement, offsetPoint, offsetDimension);
+
+        const oldElement = 
+            presWithActiveElement.slides.find(s => s.id === presWithActiveElement.activeSlideId)
+                .slideData.find(e => e.id === presWithActiveElement.selection.value[0]);
+
+            const newElem = 
+                newPres.slides.find(s => s.id === newPres.activeSlideId)
+                    .slideData.find(e => e.id === newPres.selection.value[0]);
+
+        expect(newElem.point.x).toEqual(oldElement.point.x + offsetPoint.x);
+        expect(newElem.point.y).toEqual(oldElement.point.y + offsetPoint.y);
+        expect(newElem.dimension.width).toEqual(oldElement.dimension.width + offsetDimension.width);
+        expect(newElem.dimension.height).toEqual(oldElement.dimension.height + offsetDimension.height);
+    });
+});
+
+describe('Change text content', () => {
+    it ('new element should have type text', () => {
+        const newPres = changeTextBlockProperty(presWithActiveElement, 'content', 'newContent');
+        const newElem = 
+                newPres.slides.find(s => s.id === newPres.activeSlideId)
+                    .slideData.find(e => e.id === newPres.selection.value[0]);
+        expect(newElem.type).toEqual('text');
+    });
+});
+
+describe('Change text content', () => {
+    it ('new element should have new content', () => {
+        const newPres = changeTextBlockProperty(presWithActiveElement, 'content', 'newContent');
+        const newElem = 
+                newPres.slides.find(s => s.id === newPres.activeSlideId)
+                    .slideData.find(e => e.id === newPres.selection.value[0]) as TextBlock;
+        expect(newElem.content).toEqual('newContent');
+    });
+});
+
+describe('Change font size', () => {
+    it ('new element should have new font size', () => {
+        const newPres = changeTextBlockProperty(presWithActiveElement, 'fontSize', 666);
+        const newElem = 
+                newPres.slides.find(s => s.id === newPres.activeSlideId)
+                    .slideData.find(e => e.id === newPres.selection.value[0]) as TextBlock;
+        expect(newElem.fontSize).toEqual(666);
+    });
+});
+
+describe('Try to change not existed property of textblock', () => {
+    it ('should not change elem', () => {
+        const newPres = changeTextBlockProperty(presWithActiveElement, 'hahaha', 666);
+        
+        const oldElem = 
+            presWithActiveElement.slides.find(s => s.id === presWithActiveElement.activeSlideId)
+                .slideData.find(e => e.id === presWithActiveElement.selection.value[0]) as TextBlock;
+        
+        const newElem = 
+                newPres.slides.find(s => s.id === newPres.activeSlideId)
+                    .slideData.find(e => e.id === newPres.selection.value[0]) as TextBlock;
+        expect(newElem).toEqual(oldElem);
     });
 });

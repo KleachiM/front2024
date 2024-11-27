@@ -1,4 +1,4 @@
-import { Presentation, Slide, Block, SlideElement, TextBlock, ImageBlock, Point } from './types';
+import { Presentation, Slide, Block, TextBlock, ImageBlock, Point, Dimension, Image } from './types';
 
 function getRandomString(): string {
     return `${new Date().getTime()}${Math.random()}`;
@@ -7,16 +7,17 @@ function getRandomString(): string {
 export const defaultBlock: Block = {
     id: getRandomString(),
     point: {x: 10, y: 10},
-    width: 50,
-    height: 50
+    dimension: {width: 50, height: 50}
 }
 
 const defaultTextBlock: TextBlock = {
     type: 'text',
     id: defaultBlock.id,
     point: {x: defaultBlock.point.x, y: defaultBlock.point.y},
-    width: defaultBlock.width,
-    height: defaultBlock.height,
+    dimension: {
+        width: defaultBlock.dimension.width,
+        height: defaultBlock.dimension.height
+    },
     content: '',
     fontSize: 10,
     fontColor: 'black',
@@ -27,8 +28,10 @@ const defaultImageBlock: ImageBlock = {
     type: 'image',
     id: defaultBlock.id,
     point: {x: defaultBlock.point.x, y: defaultBlock.point.y},
-    width: defaultBlock.width,
-    height: defaultBlock.height,
+    dimension: {
+        width: defaultBlock.dimension.width,
+        height: defaultBlock.dimension.height
+    },
     source: ''
 }
 
@@ -117,30 +120,122 @@ export function addElement(presentation: Presentation, elemType: string): Presen
 }
 
 export function deleteElement(presentation: Presentation) {
-    const activeSlideIndex = presentation.slides.findIndex(s => 
-        s.id === presentation.activeSlideId);
+    const activeSlideIndex = presentation.slides.findIndex(
+        s => s.id === presentation.activeSlideId
+    );
 
-    const slideData = [...presentation.slides[activeSlideIndex].slideData];
     const newSlide = {
         ...presentation.slides[activeSlideIndex],
-        slideData: slideData.filter(e => 
-            !presentation.selection.value.includes(e.id))
+        slideData: presentation.slides[activeSlideIndex].slideData.filter(
+            e => !presentation.selection.value.includes(e.id)
+        )
     }
 
-    const slides = [...presentation.slides];
-    slides[activeSlideIndex] = newSlide;
+    const newSlides = [...presentation.slides];
+    newSlides.splice(activeSlideIndex, 1, newSlide)
 
     return {
         ...presentation,
-        slides: slides
+        slides: newSlides,
     }
 }
 
-export function changeElementPosition(presentation: Presentation, newPos: Point){
-    const activeSlideIndex = presentation.slides.findIndex(s => 
-        s.id === presentation.activeSlideId);
+export function moveElementByOffset(presentation: Presentation, offset: Point): Presentation{
+    const activeSlideIndex = presentation.slides.findIndex(s => s.id === presentation.activeSlideId);
+
+    const newActiveSlideData = presentation.slides[activeSlideIndex].slideData.map(element => {
+        if (!presentation.selection.value.includes(element.id)) {
+            return element;
+        }
+        
+        return {
+            ...element,
+            point: {
+                x: element.point.x + offset.x,
+                y: element.point.y + offset.y
+            }
+        }
+    })
     
-    const activeSlideData = presentation.slides[activeSlideIndex].slideData;
-    const activeElem = activeSlideData.find(e => 
-        e.id === presentation.selection.value)
+    const newSlides = [...presentation.slides];
+    newSlides[activeSlideIndex] = {
+        ...newSlides[activeSlideIndex],
+        slideData: newActiveSlideData,
+    };
+
+    return {
+        ...presentation,
+        slides: newSlides
+    }
+}
+
+export function resizeElement(presentation: Presentation, offsetPoint: Point, offsetDimension: Dimension): Presentation{
+    const activeSlideIndex = presentation.slides.findIndex(s => s.id === presentation.activeSlideId);
+
+    const newActiveSlideData = presentation.slides[activeSlideIndex].slideData.map(element => {
+        if (!presentation.selection.value.includes(element.id)) {
+            return element;
+        }
+        
+        return {
+            ...element,
+            point: {
+                x: element.point.x + offsetPoint.x,
+                y: element.point.y + offsetPoint.y
+            },
+            dimension: {
+                width: element.dimension.width + offsetDimension.width,
+                height: element.dimension.height + offsetDimension.height
+            }
+        }
+    })
+    
+    const newSlides = [...presentation.slides];
+    newSlides[activeSlideIndex] = {
+        ...newSlides[activeSlideIndex],
+        slideData: newActiveSlideData,
+    };
+
+    return {
+        ...presentation,
+        slides: newSlides
+    }
+}
+
+export function changeTextBlockProperty(presentation: Presentation, propName: string, propValue: string|number): Presentation{
+    const activeSlideIndex = presentation.slides.findIndex(s => s.id === presentation.activeSlideId);
+
+    const newActiveSlideData = presentation.slides[activeSlideIndex].slideData.map(element => {
+        if (presentation.selection.value.includes(element.id)){
+            if (element.type !== 'text' || !(propName in element))
+                return element;
+            element[propName] = propValue;
+        }
+        return element;
+    });
+
+    const newSlides = [...presentation.slides];
+    newSlides[activeSlideIndex] = {
+        ...newSlides[activeSlideIndex],
+        slideData: newActiveSlideData,
+    };
+
+    return {
+        ...presentation,
+        slides: newSlides
+    }
+}
+
+export function changeSlideBackground(presentation: Presentation, newBckgr: string|Image): Presentation{
+    const activeSlideIndex = presentation.slides.findIndex(s => s.id === presentation.activeSlideId);
+
+    const newSlides = [...presentation.slides];
+    newSlides[activeSlideIndex] = {
+        ...newSlides[activeSlideIndex],
+        background: newBckgr
+    }
+    return {
+        ...presentation,
+        slides: newSlides
+    }
 }

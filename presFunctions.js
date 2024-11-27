@@ -26,22 +26,26 @@ exports.addSlide = addSlide;
 exports.deleteSlides = deleteSlides;
 exports.changeSlidePosition = changeSlidePosition;
 exports.addElement = addElement;
-exports.deleteBlock = deleteBlock;
+exports.deleteElement = deleteElement;
+exports.moveElementByOffset = moveElementByOffset;
+exports.resizeElement = resizeElement;
+exports.changeTextBlockProperty = changeTextBlockProperty;
 function getRandomString() {
     return "".concat(new Date().getTime()).concat(Math.random());
 }
 exports.defaultBlock = {
     id: getRandomString(),
     point: { x: 10, y: 10 },
-    width: 50,
-    height: 50
+    dimension: { width: 50, height: 50 }
 };
 var defaultTextBlock = {
     type: 'text',
     id: exports.defaultBlock.id,
     point: { x: exports.defaultBlock.point.x, y: exports.defaultBlock.point.y },
-    width: exports.defaultBlock.width,
-    height: exports.defaultBlock.height,
+    dimension: {
+        width: exports.defaultBlock.dimension.width,
+        height: exports.defaultBlock.dimension.height
+    },
     content: '',
     fontSize: 10,
     fontColor: 'black',
@@ -51,8 +55,10 @@ var defaultImageBlock = {
     type: 'image',
     id: exports.defaultBlock.id,
     point: { x: exports.defaultBlock.point.x, y: exports.defaultBlock.point.y },
-    width: exports.defaultBlock.width,
-    height: exports.defaultBlock.height,
+    dimension: {
+        width: exports.defaultBlock.dimension.width,
+        height: exports.defaultBlock.dimension.height
+    },
     source: ''
 };
 var defaultSlide = {
@@ -104,13 +110,57 @@ function addElement(presentation, elemType) {
     slides[activeSlideIndex] = newSlide;
     return __assign(__assign({}, presentation), { slides: slides });
 }
-function deleteBlock(presentation) {
-    var activeSlideIndex = presentation.slides.findIndex(function (s) {
-        return s.id === presentation.activeSlideId;
+function deleteElement(presentation) {
+    var activeSlideIndex = presentation.slides.findIndex(function (s) { return s.id === presentation.activeSlideId; });
+    var newSlide = __assign(__assign({}, presentation.slides[activeSlideIndex]), { slideData: presentation.slides[activeSlideIndex].slideData.filter(function (e) { return !presentation.selection.value.includes(e.id); }) });
+    var newSlides = __spreadArray([], presentation.slides, true);
+    newSlides.splice(activeSlideIndex, 1, newSlide);
+    return __assign(__assign({}, presentation), { slides: newSlides });
+}
+function moveElementByOffset(presentation, offset) {
+    var activeSlideIndex = presentation.slides.findIndex(function (s) { return s.id === presentation.activeSlideId; });
+    var newActiveSlideData = presentation.slides[activeSlideIndex].slideData.map(function (element) {
+        if (!presentation.selection.value.includes(element.id)) {
+            return element;
+        }
+        return __assign(__assign({}, element), { point: {
+                x: element.point.x + offset.x,
+                y: element.point.y + offset.y
+            } });
     });
-    var slideData = __spreadArray([], presentation.slides[activeSlideIndex].slideData, true);
-    var newSlide = __assign(__assign({}, presentation.slides[activeSlideIndex]), { slideData: slideData.filter(function (e) { return !presentation.selection.value.includes(e.id); }) });
-    var slides = __spreadArray([], presentation.slides, true);
-    slides[activeSlideIndex] = newSlide;
-    return __assign(__assign({}, presentation), { slides: slides });
+    var newSlides = __spreadArray([], presentation.slides, true);
+    newSlides[activeSlideIndex] = __assign(__assign({}, newSlides[activeSlideIndex]), { slideData: newActiveSlideData });
+    return __assign(__assign({}, presentation), { slides: newSlides });
+}
+function resizeElement(presentation, offsetPoint, offsetDimension) {
+    var activeSlideIndex = presentation.slides.findIndex(function (s) { return s.id === presentation.activeSlideId; });
+    var newActiveSlideData = presentation.slides[activeSlideIndex].slideData.map(function (element) {
+        if (!presentation.selection.value.includes(element.id)) {
+            return element;
+        }
+        return __assign(__assign({}, element), { point: {
+                x: element.point.x + offsetPoint.x,
+                y: element.point.y + offsetPoint.y
+            }, dimension: {
+                width: element.dimension.width + offsetDimension.width,
+                height: element.dimension.height + offsetDimension.height
+            } });
+    });
+    var newSlides = __spreadArray([], presentation.slides, true);
+    newSlides[activeSlideIndex] = __assign(__assign({}, newSlides[activeSlideIndex]), { slideData: newActiveSlideData });
+    return __assign(__assign({}, presentation), { slides: newSlides });
+}
+function changeTextBlockProperty(presentation, propName, propValue) {
+    var activeSlideIndex = presentation.slides.findIndex(function (s) { return s.id === presentation.activeSlideId; });
+    var newActiveSlideData = presentation.slides[activeSlideIndex].slideData.map(function (element) {
+        if (presentation.selection.value.includes(element.id)) {
+            if (element.type !== 'text' || !(propName in element))
+                return element;
+            element[propName] = propValue;
+        }
+        return element;
+    });
+    var newSlides = __spreadArray([], presentation.slides, true);
+    newSlides[activeSlideIndex] = __assign(__assign({}, newSlides[activeSlideIndex]), { slideData: newActiveSlideData });
+    return __assign(__assign({}, presentation), { slides: newSlides });
 }
